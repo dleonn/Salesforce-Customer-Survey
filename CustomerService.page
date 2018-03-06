@@ -1,0 +1,122 @@
+<apex:page controller="CustomerServiceCTRL">
+	<!-- CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous" />
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+
+    <style>
+    	.star-container{
+    		list-style: none;
+    		margin: 0;
+    	}
+
+    	.star-container > li{
+    		display: inline-block;
+    		color: yellow;
+    		font-size: 50px;
+    		margin: 0;
+    	}
+    </style>
+
+
+    <script type="text/javascript">
+	    var customerServiceApp = angular.module('customerServiceApp',[]);
+
+	    customerServiceApp.controller('customerServiceCtrl', ['$scope' ,function($scope) {
+	        var vm = this;
+
+	        vm.questions = [];
+	        vm.contQuestion = 0;
+	        vm.activeQuestion = null;
+
+	        vm.answers = []
+
+	        vm.star_hover = 'glyphicon glyphicon-star';
+	        vm.star_no_hover = 'glyphicon glyphicon-star-empty';
+	        vm.starSelector = 0;
+
+	        vm.getQuestions = function(){
+	        	Visualforce.remoting.Manager.invokeAction(
+		            '{!$RemoteAction.CustomerServiceCTRL.getQuestions}',
+		            vm.handleResult
+		        );
+	        }
+
+	        vm.handleResult = function(){
+	        	vm.questions = arguments[0].questions;
+
+	        	vm.activeQuestion = vm.questions[vm.contQuestion];
+	        	console.log(vm.activeQuestion);
+	        	console.log(vm.activeQuestion.name);
+	        	console.log(vm.activeQuestion.question);
+	        	$scope.$apply();
+	        }
+
+	        vm.rating = function(rate){
+	        	var answer = {};
+
+	        	answer.Question_Name__c = vm.activeQuestion.question;
+	        	answer.Rating__c = rate;
+
+	        	vm.answers.push(answer);
+
+	        	console.log(vm.answers);
+
+	        	vm.contQuestion = vm.contQuestion + 1;
+	        	vm.activeQuestion = vm.questions[vm.contQuestion];
+
+	        	vm.starSelector = 0;
+
+	        	if(vm.contQuestion == vm.questions.length){
+	        		vm.sendSurvey();
+	        	}
+	        }
+
+	        vm.sendSurvey = function(){
+	        	Visualforce.remoting.Manager.invokeAction(
+		            '{!$RemoteAction.CustomerServiceCTRL.insertSurvey}',
+		            '0066A000006DDHGQA4',
+		            '0016A00000LcuPEQAZ',
+		            JSON.stringify(vm.answers),
+		            vm.handleResult2
+		        );
+	        }
+
+	        vm.handleResult2 = function(){
+	        	console.log(arguments);	
+	        }
+
+	        vm.getQuestions();
+	    }]);
+	</script>
+
+	<body ng-app="customerServiceApp" ng-controller="customerServiceCtrl as vm">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12">
+						<label ng-bind="vm.activeQuestion.question"></label>
+				</div>
+			</div>
+			<div class="row">
+				<ul class="star-container">
+					<li>
+						<span ng-class="{ 'glyphicon-star' : vm.starSelector >= 1, 'glyphicon-star-empty' :  vm.starSelector < 1}" class="glyphicon" aria-hidden="true" ng-mouseover="vm.starSelector = 1" ng-click="vm.rating(1)" ></span>
+					</li>
+					<li>
+						<span ng-class="{ 'glyphicon-star' : vm.starSelector >= 2, 'glyphicon-star-empty' :  vm.starSelector < 2}" class="glyphicon" aria-hidden="true" ng-mouseover="vm.starSelector = 2" ng-click="vm.rating(2)" ></span>
+					</li>
+					<li>
+						<span ng-class="{ 'glyphicon-star' : vm.starSelector >= 3, 'glyphicon-star-empty' :  vm.starSelector < 3}" class="glyphicon" aria-hidden="true" ng-mouseover="vm.starSelector = 3" ng-click="vm.rating(3)" ></span>
+					</li>
+					<li>
+						<span ng-class="{ 'glyphicon-star' : vm.starSelector >= 4, 'glyphicon-star-empty' :  vm.starSelector < 4}" class="glyphicon" aria-hidden="true" ng-mouseover="vm.starSelector = 4" ng-click="vm.rating(4)" ></span>
+					</li>
+					<li>
+						<span ng-class="{ 'glyphicon-star' : vm.starSelector >= 5, 'glyphicon-star-empty' :  vm.starSelector < 5}" class="glyphicon" aria-hidden="true" ng-mouseover="vm.starSelector = 5" ng-click="vm.rating(5)" ></span>
+					</li>
+					
+				</ul>
+			</div>			
+		</div>
+	</body>
+</apex:page>
